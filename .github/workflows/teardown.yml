@@ -1,0 +1,44 @@
+name: Scheduled Teardown of Deployments
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # This cron job runs every 5 minutes
+
+jobs:
+  teardown-old-deployments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Surge CLI
+        run: npm install -g surge
+
+      - name: Teardown old sites
+        run: |
+          # This assumes a file named 'deployed-urls.txt' exists in the root of the repo
+          # It should contain one URL per line, with a timestamp like this:
+          # https://example-domain.surge.sh 1678886400
+          
+          if [ -f deployed-urls.txt ]; then
+            while read -r url timestamp; do
+              # Get current time in seconds since the epoch
+              current_time=$(date +%s)
+              
+              # Calculate the difference in minutes
+              time_diff_minutes=$(( (current_time - timestamp) / 60 ))
+              
+              # If the deployment is older than 15 minutes, tear it down
+              if [ $time_diff_minutes -ge 15 ]; then
+                echo "Tearing down old deployment: $url"
+                surge teardown "$url" --token ${{ secrets.SURGE_TOKEN }}
+              fi
+            done < deployed-urls.txt
+          else
+            echo "No deployed-urls.txt file found. Nothing to tear down."
+          fi

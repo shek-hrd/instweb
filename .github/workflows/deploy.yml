@@ -1,0 +1,43 @@
+name: Deploy to Surge
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Surge CLI
+        run: npm install -g surge
+
+      - name: Get latest commit message
+        id: commit_message
+        run: echo "::set-output name=message::$(git log -1 --pretty=%B)"
+      
+      - name: Deploy to Surge
+        run: |
+          # Use a semi-random subdomain based on commit hash to ensure uniqueness
+          REPO_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)
+          COMMIT_SHORT_SHA=${{ github.sha }}
+          SURGE_DOMAIN="${REPO_NAME}-${COMMIT_SHORT_SHA:0:7}.surge.sh"
+          
+          # The surge command uses the token from the repository secret
+          # The file to deploy is the one just committed
+          surge ./ ${{ SURGE_DOMAIN }} --token ${{ secrets.SURGE_TOKEN }}
+          
+          echo "Deployed to: https://${SURGE_DOMAIN}"
+          echo "::set-output name=url::https://${SURGE_DOMAIN}"
+        id: surge_deploy
+
+      - name: Post deployment message
+        # This step could use the GitHub API to post the new URL as a commit comment
+        run: |
+          echo "Deployment successful! Check it out at ${{ steps.surge_deploy.outputs.url }}"
