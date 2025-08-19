@@ -21,13 +21,12 @@ jobs:
       - name: Deploy to Surge
         run: |
           # Use a semi-random subdomain based on the commit SHA
-          # This is the correct way to get the short SHA in GitHub Actions
           COMMIT_SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
           SURGE_DOMAIN="instweb-${COMMIT_SHORT_SHA}.surge.sh"
           
           echo "Deploying to ${SURGE_DOMAIN}"
           
-          # The surge command uses the token from the repository secret
-          surge ./ ${{ SURGE_DOMAIN }} --token ${{ secrets.SURGE_TOKEN }}
+          # The surge command now uses the shell variable
+          surge ./ "$SURGE_DOMAIN" --token ${{ secrets.SURGE_TOKEN }}
           
           echo "Deployment successful! The URL is: https://${SURGE_DOMAIN}"
