@@ -3,449 +3,845 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI WebApp Builder</title>
+    <title>AI Web App Builder - Powered by Puter.js</title>
+    
+    <!-- Puter.js SDK -->
     <script src="https://js.puter.com/v2/"></script>
+    
     <style>
+        /* CSS Variables for consistent theming */
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #5558e3;
+            --secondary-color: #22d3ee;
+            --bg-dark: #0f172a;
+            --bg-medium: #1e293b;
+            --bg-light: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #475569;
+            --success-color: #34d399;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1f3a 100%);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        
+
+        /* Header Styles */
         .header {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
             padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        .header h1 {
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            font-size: 2rem;
-            font-weight: 300;
-            text-align: center;
+            font-weight: bold;
         }
-        
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-light);
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error-color);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--success-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Container */
         .container {
+            flex: 1;
             display: flex;
-            flex: 1;
-            gap: 1rem;
-            padding: 1rem;
-            height: calc(100vh - 100px);
-        }
-        
-        .left-panel {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
+            gap: 1.5rem;
             padding: 1.5rem;
+            max-width: 100%;
+            height: calc(100vh - 80px);
+        }
+
+        /* Left Panel - Input Section */
+        .input-panel {
+            flex: 0 0 400px;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        .right-panel {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.95);
+            gap: 1.5rem;
+            background: rgba(30, 41, 59, 0.5);
             border-radius: 12px;
             padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .input-group {
             display: flex;
             flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            gap: 0.5rem;
         }
-        
-        .input-section {
-            margin-bottom: 2rem;
+
+        label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        
-        .input-section label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .prompt-input {
+
+        .prompt-textarea {
             width: 100%;
-            min-height: 120px;
+            min-height: 200px;
             padding: 1rem;
-            border: 2px solid #e0e0e0;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
             resize: vertical;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
         }
-        
-        .prompt-input:focus {
+
+        .prompt-textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
-        
-        .generate-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
+
+        /* Template Buttons */
+        .templates {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .template-btn {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 16px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .template-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .template-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        
-        .generate-btn:hover {
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
         }
-        
-        .generate-btn:disabled {
-            opacity: 0.6;
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-medium);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
-        
-        .code-section {
+
+        /* Preview Panel */
+        .preview-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
         }
-        
-        .code-textarea {
-            flex: 1;
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 13px;
-            resize: none;
-            background: #f8f9fa;
-        }
-        
-        .preview-section {
-            flex: 1;
+
+        .preview-header {
+            padding: 1rem 1.5rem;
+            background: var(--bg-medium);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
         }
-        
+
+        .preview-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            padding: 0.5rem;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
         .preview-frame {
             flex: 1;
             width: 100%;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border: none;
             background: white;
         }
-        
-        .status {
-            padding: 0.5rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            font-size: 14px;
+
+        /* Code View */
+        .code-view {
+            flex: 1;
+            padding: 1.5rem;
+            background: var(--bg-dark);
+            overflow: auto;
+            display: none;
         }
-        
-        .status.loading {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .status.success {
-            background: #e8f5e8;
-            color: #2e7d32;
-        }
-        
-        .status.error {
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .examples {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .examples h3 {
-            margin-bottom: 0.5rem;
-            color: #333;
-            font-size: 16px;
-        }
-        
-        .example-btn {
+
+        .code-view.active {
             display: block;
-            width: 100%;
-            text-align: left;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            font-size: 14px;
         }
-        
-        .example-btn:hover {
-            background: #e9ecef;
+
+        .code-content {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
-        
-        .controls {
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             gap: 1rem;
-            margin-bottom: 1rem;
+            display: none;
+            z-index: 1000;
         }
-        
-        .update-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+
+        .loading-overlay.active {
+            display: flex;
         }
-        
-        .clear-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Error Message */
+        .error-message {
+            padding: 1rem;
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid var(--error-color);
+            border-radius: 8px;
+            color: var(--error-color);
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
-                height: auto;
             }
             
-            .left-panel, .right-panel {
+            .input-panel {
                 flex: none;
-                min-height: 400px;
+                width: 100%;
+            }
+            
+            .templates {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🤖 AI WebApp Builder</h1>
-    </div>
-    
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">AI</div>
+            <span>AI Web Builder</span>
+        </div>
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Initializing...</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
     <div class="container">
-        <div class="left-panel">
-            <div class="input-section">
-                <label for="prompt">Describe the webapp you want to create:</label>
+        <!-- Input Panel -->
+        <div class="input-panel">
+            <div class="input-group">
+                <label for="appPrompt">Describe Your Web App</label>
                 <textarea 
-                    id="prompt" 
-                    class="prompt-input" 
-                    placeholder="Example: Create a todo list app with add, delete, and mark complete functionality. Use a modern design with purple colors."
+                    id="appPrompt" 
+                    class="prompt-textarea"
+                    placeholder="Example: Create a modern calculator app with dark theme and scientific functions..."
                 ></textarea>
-                
-                <button id="generateBtn" class="generate-btn">Generate WebApp</button>
-                
-                <div id="status" class="status" style="display: none;"></div>
             </div>
-            
-            <div class="code-section">
-                <label>Generated Code:</label>
-                <div class="controls">
-                    <button id="updateBtn" class="update-btn">Update Preview</button>
-                    <button id="clearBtn" class="clear-btn">Clear</button>
+
+            <div class="input-group">
+                <label>Quick Templates</label>
+                <div class="templates">
+                    <button class="template-btn" onclick="useTemplate('calculator')">
+                        <span class="template-icon">🧮</span>
+                        <span>Calculator</span>
+                    </button>
+                    <button class="template-btn" onclick="useTemplate('todo')">
+                        <span class="template-icon">✅</span>
+                        <span>Todo List</span>
+                    </button>
+                    <button class="template-btn" onclick="useTemplate('timer')">
+                        <span class="template-icon">⏱️</span>
+                        <span>Timer</span>
+                    </button>
+                    <button class="template-btn" onclick="useTemplate('notes')">
+                        <span class="template-icon">📝</span>
+                        <span>Notes App</span>
+                    </button>
+                    <button class="template-btn" onclick="useTemplate('game')">
+                        <span class="template-icon">🎮</span>
+                        <span>Simple Game</span>
+                    </button>
+                    <button class="template-btn" onclick="useTemplate('dashboard')">
+                        <span class="template-icon">📊</span>
+                        <span>Dashboard</span>
+                    </button>
                 </div>
-                <textarea id="codeOutput" class="code-textarea" placeholder="Generated code will appear here..."></textarea>
             </div>
-            
-            <div class="examples">
-                <h3>Example Prompts:</h3>
-                <button class="example-btn" onclick="setExample('Create a calculator app with basic arithmetic operations and a clean design')">Calculator App</button>
-                <button class="example-btn" onclick="setExample('Build a weather dashboard that shows current conditions with animated icons')">Weather Dashboard</button>
-                <button class="example-btn" onclick="setExample('Create a color picker tool with RGB, HSL, and hex values display')">Color Picker Tool</button>
-                <button class="example-btn" onclick="setExample('Build a simple drawing canvas with different brush sizes and colors')">Drawing Canvas</button>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="action-buttons">
+                <button id="generateBtn" class="btn btn-primary" onclick="generateApp()">
+                    <span>🚀</span>
+                    <span>Generate App</span>
+                </button>
+                <button class="btn btn-secondary" onclick="clearAll()">
+                    <span>🔄</span>
+                    <span>Clear</span>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label>Generated Code Stats</label>
+                <div style="padding: 1rem; background: var(--bg-dark); border-radius: 8px; font-size: 0.875rem; color: var(--text-secondary);">
+                    <div>Lines of code: <span id="codeLines">0</span></div>
+                    <div>File size: <span id="codeSize">0 KB</span></div>
+                </div>
             </div>
         </div>
-        
-        <div class="right-panel">
-            <div class="preview-section">
-                <label>Live Preview:</label>
-                <iframe id="previewFrame" class="preview-frame" src="about:blank"></iframe>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <div class="preview-header">
+                <div class="preview-title">
+                    <span>👁️</span>
+                    <span id="previewTitle">Preview</span>
+                </div>
+                <div class="preview-actions">
+                    <button class="icon-btn" onclick="toggleView()" title="Toggle Code View">
+                        <span id="viewToggle">&lt;/&gt;</span>
+                    </button>
+                    <button class="icon-btn" onclick="refreshPreview()" title="Refresh Preview">
+                        <span>🔄</span>
+                    </button>
+                    <button class="icon-btn" onclick="downloadCode()" title="Download HTML">
+                        <span>⬇️</span>
+                    </button>
+                    <button class="icon-btn" onclick="copyCode()" title="Copy Code">
+                        <span>📋</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Preview Frame -->
+            <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+            
+            <!-- Code View -->
+            <div id="codeView" class="code-view">
+                <pre class="code-content" id="codeContent"></pre>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Generating your app with AI...</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize Puter
-        let puter;
-        
-        // Wait for Puter to load
-        window.addEventListener('load', async () => {
+        // Global variables to store app state
+        let generatedCode = '';
+        let isConnected = false;
+        let currentView = 'preview'; // 'preview' or 'code'
+
+        // Template definitions
+        const templates = {
+            calculator: "Create a modern scientific calculator with a dark theme. Include basic operations (add, subtract, multiply, divide), scientific functions (sin, cos, tan, log, square root), memory functions, and a history of calculations. Use a grid layout for buttons with hover effects and smooth animations.",
+            
+            todo: "Build a beautiful todo list app with the ability to add, edit, delete, and mark tasks as complete. Include categories, due dates, priority levels, search functionality, and local storage to persist data. Add smooth animations for adding/removing items and a progress bar showing completion percentage.",
+            
+            timer: "Create a versatile timer application with countdown timer, stopwatch, and pomodoro timer modes. Include start, pause, reset controls, custom time input, audio alerts when timer ends, and visual progress indicators. Add preset times and a clean, minimalist interface.",
+            
+            notes: "Develop a note-taking app with rich text editing capabilities. Include features for creating, editing, deleting notes, markdown support, search functionality, tags/categories, and local storage. Add a sidebar for note navigation and a clean editor interface.",
+            
+            game: "Create a simple but engaging puzzle game like 2048 or a memory card matching game. Include score tracking, difficulty levels, smooth animations, sound effects (using web audio), and a game over screen with restart option. Make it visually appealing with gradients and modern design.",
+            
+            dashboard: "Build an analytics dashboard with various charts and widgets. Include bar charts, line graphs, pie charts, stat cards with icons, a data table with sorting, and filters. Use modern gradients, card-based layout, and make it responsive. Include sample data for demonstration."
+        };
+
+        // Initialize Puter when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
             try {
-                puter = new Puter();
-                console.log('Puter initialized successfully');
+                // Initialize Puter
+                await initializePuter();
+                
+                // Set initial status
+                updateStatus(true);
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Load sample prompt
+                document.getElementById('appPrompt').value = "Create a simple, modern web application";
+                
             } catch (error) {
-                console.error('Failed to initialize Puter:', error);
-                showStatus('Failed to initialize AI service. Please refresh the page.', 'error');
+                console.error('Initialization error:', error);
+                updateStatus(false);
+                showError('Failed to initialize. Please refresh the page.');
             }
         });
-        
-        const promptInput = document.getElementById('prompt');
-        const generateBtn = document.getElementById('generateBtn');
-        const updateBtn = document.getElementById('updateBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const codeOutput = document.getElementById('codeOutput');
-        const previewFrame = document.getElementById('previewFrame');
-        const status = document.getElementById('status');
-        
-        let isGenerating = false;
-        
-        function showStatus(message, type) {
-            status.textContent = message;
-            status.className = `status ${type}`;
-            status.style.display = 'block';
+
+        // Initialize Puter connection
+        async function initializePuter() {
+            try {
+                // Note: In production, you might want to handle authentication
+                // For now, we'll just mark as connected since Puter.js is loaded
+                isConnected = true;
+                console.log('Puter.js loaded successfully');
+            } catch (error) {
+                console.error('Puter initialization error:', error);
+                isConnected = false;
+                throw error;
+            }
         }
-        
-        function hideStatus() {
-            status.style.display = 'none';
+
+        // Update connection status indicator
+        function updateStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Ready';
+                isConnected = true;
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                isConnected = false;
+            }
         }
-        
-        function updatePreview() {
-            const code = codeOutput.value.trim();
-            if (!code) {
-                previewFrame.src = 'about:blank';
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Enter key in textarea triggers generation
+            document.getElementById('appPrompt').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    generateApp();
+                }
+            });
+        }
+
+        // Use a template
+        function useTemplate(templateName) {
+            const prompt = templates[templateName];
+            if (prompt) {
+                document.getElementById('appPrompt').value = prompt;
+                // Auto-generate after selecting template
+                setTimeout(() => generateApp(), 100);
+            }
+        }
+
+        // Main function to generate app using Puter AI
+        async function generateApp() {
+            const prompt = document.getElementById('appPrompt').value.trim();
+            
+            if (!prompt) {
+                showError('Please enter a description for your app');
                 return;
             }
+
+            if (!isConnected) {
+                showError('Not connected to Puter. Please refresh the page.');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
             
+            try {
+                // Show loading state
+                generateBtn.disabled = true;
+                loadingOverlay.classList.add('active');
+                hideError();
+
+                // Construct the enhanced prompt for better code generation
+                const enhancedPrompt = `Create a complete, single-file HTML web application based on this description: ${prompt}
+
+                Requirements:
+                1. Create a COMPLETE, FUNCTIONAL HTML file with embedded CSS and JavaScript
+                2. Use modern, responsive design with attractive colors and smooth animations
+                3. Include all functionality in a single HTML file (no external dependencies except CDNs if needed)
+                4. Make it visually impressive with gradients, shadows, and modern UI patterns
+                5. Ensure the app is fully interactive and works immediately when opened
+                6. Add helpful comments in the code
+                7. Use semantic HTML5 elements
+                8. Include error handling where appropriate
+                
+                Return ONLY the complete HTML code, starting with <!DOCTYPE html> and ending with </html>.
+                Do not include any explanations or markdown formatting.`;
+
+                // Call Puter AI API
+                const response = await puter.ai.chat(enhancedPrompt, {
+                    model: 'claude-3.5-sonnet'
+                });
+
+                // Extract the generated code
+                generatedCode = extractHTMLCode(response);
+                
+                if (!generatedCode) {
+                    throw new Error('Failed to generate valid HTML code');
+                }
+
+                // Update the preview
+                updatePreview(generatedCode);
+                
+                // Update code stats
+                updateCodeStats(generatedCode);
+                
+                // Show success feedback
+                showSuccess();
+                
+            } catch (error) {
+                console.error('Generation error:', error);
+                showError(`Failed to generate app: ${error.message}`);
+            } finally {
+                // Reset loading state
+                generateBtn.disabled = false;
+                loadingOverlay.classList.remove('active');
+            }
+        }
+
+        // Extract HTML code from AI response
+        function extractHTMLCode(response) {
+            // Handle different response formats
+            if (typeof response === 'object' && response.text) {
+                response = response.text;
+            } else if (typeof response === 'object' && response.content) {
+                response = response.content;
+            }
+            
+            // Convert to string if needed
+            response = String(response);
+            
+            // Try to extract HTML code from the response
+            // First, check if the response is already valid HTML
+            if (response.trim().startsWith('<!DOCTYPE html') || response.trim().startsWith('<html')) {
+                return response.trim();
+            }
+            
+            // Try to extract HTML from code blocks
+            const codeBlockMatch = response.match(/```html?\s*([\s\S]*?)```/);
+            if (codeBlockMatch) {
+                return codeBlockMatch[1].trim();
+            }
+            
+            // Try to find HTML document in the response
+            const htmlMatch = response.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
+            if (htmlMatch) {
+                return htmlMatch[0];
+            }
+            
+            // If it contains HTML-like content, wrap it in a basic template
+            if (response.includes('<') && response.includes('>')) {
+                return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated App</title>
+</head>
+<body>
+    ${response}
+</body>
+</html>`;
+            }
+            
+            return null;
+        }
+
+        // Update the preview iframe with generated code
+        function updatePreview(code) {
+            const previewFrame = document.getElementById('previewFrame');
+            const codeContent = document.getElementById('codeContent');
+            
+            // Update code view
+            codeContent.textContent = code;
+            
+            // Update iframe
             const blob = new Blob([code], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
+            
+            // Clean up previous blob URL if exists
+            if (previewFrame.dataset.blobUrl) {
+                URL.revokeObjectURL(previewFrame.dataset.blobUrl);
+            }
+            
+            previewFrame.dataset.blobUrl = url;
             previewFrame.src = url;
             
-            // Clean up the previous blob URL
-            previewFrame.onload = () => {
-                if (previewFrame.dataset.prevUrl) {
-                    URL.revokeObjectURL(previewFrame.dataset.prevUrl);
-                }
-                previewFrame.dataset.prevUrl = url;
-            };
+            // Update title
+            document.getElementById('previewTitle').textContent = 'Preview - App Generated';
         }
-        
-        async function generateWebApp() {
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                showStatus('Please enter a description for your webapp', 'error');
+
+        // Update code statistics
+        function updateCodeStats(code) {
+            const lines = code.split('\n').length;
+            const sizeInKB = (new Blob([code]).size / 1024).toFixed(2);
+            
+            document.getElementById('codeLines').textContent = lines;
+            document.getElementById('codeSize').textContent = `${sizeInKB} KB`;
+        }
+
+        // Toggle between preview and code view
+        function toggleView() {
+            const previewFrame = document.getElementById('previewFrame');
+            const codeView = document.getElementById('codeView');
+            const viewToggle = document.getElementById('viewToggle');
+            
+            if (currentView === 'preview') {
+                previewFrame.style.display = 'none';
+                codeView.classList.add('active');
+                viewToggle.textContent = '👁️';
+                currentView = 'code';
+            } else {
+                previewFrame.style.display = 'block';
+                codeView.classList.remove('active');
+                viewToggle.textContent = '</>';
+                currentView = 'preview';
+            }
+        }
+
+        // Refresh preview
+        function refreshPreview() {
+            if (generatedCode) {
+                updatePreview(generatedCode);
+            }
+        }
+
+        // Download generated code
+        function downloadCode() {
+            if (!generatedCode) {
+                showError('No code to download. Generate an app first.');
                 return;
             }
             
-            if (isGenerating) return;
+            const blob = new Blob([generatedCode], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated-app.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-            if (!puter) {
-                showStatus('AI service is not ready. Please wait a moment and try again.', 'error');
+            showSuccess('Code downloaded successfully!');
+        }
+
+        // Copy code to clipboard
+        async function copyCode() {
+            if (!generatedCode) {
+                showError('No code to copy. Generate an app first.');
                 return;
             }
-            
-            isGenerating = true;
-            generateBtn.disabled = true;
-            generateBtn.textContent = 'Generating...';
-            showStatus('Generating your webapp...', 'loading');
             
             try {
-                const fullPrompt = `Create a complete, functional HTML webapp based on this description: "${prompt}". 
-                
-Requirements:
-- Return ONLY the complete HTML code with embedded CSS and JavaScript
-- Make it fully functional and interactive
-- Use modern, clean design principles
-- Include responsive design
-- Add appropriate animations and hover effects
-- Use semantic HTML structure
-- No external dependencies except for fonts or icons from CDN if needed
-- Make sure all functionality works properly
-- Use creative, modern styling with good color schemes
-
-The response should be ready to run as-is in a browser.`;
-                
-                const response = await puter.ai.chat([
-                    {
-                        role: "user",
-                        content: fullPrompt
-                    }
-                ]);
-                
-                const generatedCode = response.message?.content || response;
-                
-                // Extract HTML from markdown code blocks if present
-                let htmlCode = generatedCode;
-                const htmlMatch = generatedCode.match(/```html\n([\s\S]*?)\n```/);
-                if (htmlMatch) {
-                    htmlCode = htmlMatch[1];
-                } else {
-                    // Try to find HTML without markdown
-                    const docMatch = generatedCode.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
-                    if (docMatch) {
-                        htmlCode = docMatch[0];
-                    }
-                }
-                
-                codeOutput.value = htmlCode;
-                updatePreview();
-                showStatus('WebApp generated successfully!', 'success');
-                
+                await navigator.clipboard.writeText(generatedCode);
+                showSuccess('Code copied to clipboard!');
             } catch (error) {
-                console.error('Error generating webapp:', error);
-                showStatus('Error generating webapp. Please try again.', 'error');
-            } finally {
-                isGenerating = false;
-                generateBtn.disabled = false;
-                generateBtn.textContent = 'Generate WebApp';
+                showError('Failed to copy code to clipboard');
             }
         }
-        
-        function setExample(exampleText) {
-            promptInput.value = exampleText;
-            hideStatus();
-        }
-        
-        // Make setExample available globally for onclick handlers
-        window.setExample = setExample;
-        
+
+        // Clear all inputs and preview
         function clearAll() {
-            codeOutput.value = '';
-            previewFrame.src = 'about:blank';
-            hideStatus();
+            document.getElementById('appPrompt').value = '';
+            document.getElementById('previewFrame').src = 'about:blank';
+            document.getElementById('codeContent').textContent = '';
+            document.getElementById('previewTitle').textContent = 'Preview';
+            generatedCode = '';
+            updateCodeStats('');
+            hideError();
         }
-        
-        // Event listeners - wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            generateBtn.addEventListener('click', generateWebApp);
-            updateBtn.addEventListener('click', updatePreview);
-            clearBtn.addEventListener('click', clearAll);
-            
-            // Auto-update preview when code changes (debounced)
-            let updateTimeout;
-            codeOutput.addEventListener('input', () => {
-                clearTimeout(updateTimeout);
-                updateTimeout = setTimeout(updatePreview, 1000);
-            });
-            
-            // Allow Enter + Ctrl/Cmd to generate
-            promptInput.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    generateWebApp();
-                }
-            });
-            
-            // Initialize
-            hideStatus();
-        });
+
+        // Show error message
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.classList.add('active');
+            setTimeout(() => hideError(), 5000);
+        }
+
+        // Hide error message
+        function hideError() {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.classList.remove('active');
+        }
+
+        // Show success feedback
+        function showSuccess(message = 'App generated successfully!') {
+            // You could add a success toast notification here
+            console.log(message);
+        }
     </script>
 </body>
 </html>
