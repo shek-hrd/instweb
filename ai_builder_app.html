@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI WebApp Builder</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 300;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            gap: 1rem;
+            padding: 1rem;
+            height: calc(100vh - 100px);
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .right-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-section {
+            margin-bottom: 2rem;
+        }
+        
+        .input-section label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .prompt-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        .prompt-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .code-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .code-textarea {
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            resize: none;
+            background: #f8f9fa;
+        }
+        
+        .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-frame {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .status {
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 14px;
+        }
+        
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .examples {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .examples h3 {
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .example-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .example-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .update-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .left-panel, .right-panel {
+                flex: none;
+                min-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 AI WebApp Builder</h1>
+    </div>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="input-section">
+                <label for="prompt">Describe the webapp you want to create:</label>
+                <textarea 
+                    id="prompt" 
+                    class="prompt-input" 
+                    placeholder="Example: Create a todo list app with add, delete, and mark complete functionality. Use a modern design with purple colors."
+                ></textarea>
+                
+                <button id="generateBtn" class="generate-btn">Generate WebApp</button>
+                
+                <div id="status" class="status" style="display: none;"></div>
+            </div>
+            
+            <div class="code-section">
+                <label>Generated Code:</label>
+                <div class="controls">
+                    <button id="updateBtn" class="update-btn">Update Preview</button>
+                    <button id="clearBtn" class="clear-btn">Clear</button>
+                </div>
+                <textarea id="codeOutput" class="code-textarea" placeholder="Generated code will appear here..."></textarea>
+            </div>
+            
+            <div class="examples">
+                <h3>Example Prompts:</h3>
+                <button class="example-btn" onclick="setExample('Create a calculator app with basic arithmetic operations and a clean design')">Calculator App</button>
+                <button class="example-btn" onclick="setExample('Build a weather dashboard that shows current conditions with animated icons')">Weather Dashboard</button>
+                <button class="example-btn" onclick="setExample('Create a color picker tool with RGB, HSL, and hex values display')">Color Picker Tool</button>
+                <button class="example-btn" onclick="setExample('Build a simple drawing canvas with different brush sizes and colors')">Drawing Canvas</button>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="preview-section">
+                <label>Live Preview:</label>
+                <iframe id="previewFrame" class="preview-frame" src="about:blank"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Puter
+        let puter;
+        
+        // Wait for Puter to load
+        window.addEventListener('load', async () => {
+            try {
+                puter = new Puter();
+                console.log('Puter initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize Puter:', error);
+                showStatus('Failed to initialize AI service. Please refresh the page.', 'error');
+            }
+        });
+        
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const codeOutput = document.getElementById('codeOutput');
+        const previewFrame = document.getElementById('previewFrame');
+        const status = document.getElementById('status');
+        
+        let isGenerating = false;
+        
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+        
+        function hideStatus() {
+            status.style.display = 'none';
+        }
+        
+        function updatePreview() {
+            const code = codeOutput.value.trim();
+            if (!code) {
+                previewFrame.src = 'about:blank';
+                return;
+            }
+            
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+            
+            // Clean up the previous blob URL
+            previewFrame.onload = () => {
+                if (previewFrame.dataset.prevUrl) {
+                    URL.revokeObjectURL(previewFrame.dataset.prevUrl);
+                }
+                previewFrame.dataset.prevUrl = url;
+            };
+        }
+        
+        async function generateWebApp() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showStatus('Please enter a description for your webapp', 'error');
+                return;
+            }
+            
+            if (isGenerating) return;
+            
+            if (!puter) {
+                showStatus('AI service is not ready. Please wait a moment and try again.', 'error');
+                return;
+            }
+            
+            isGenerating = true;
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            showStatus('Generating your webapp...', 'loading');
+            
+            try {
+                const fullPrompt = `Create a complete, functional HTML webapp based on this description: "${prompt}". 
+                
+Requirements:
+- Return ONLY the complete HTML code with embedded CSS and JavaScript
+- Make it fully functional and interactive
+- Use modern, clean design principles
+- Include responsive design
+- Add appropriate animations and hover effects
+- Use semantic HTML structure
+- No external dependencies except for fonts or icons from CDN if needed
+- Make sure all functionality works properly
+- Use creative, modern styling with good color schemes
+
+The response should be ready to run as-is in a browser.`;
+                
+                const response = await puter.ai.chat([
+                    {
+                        role: "user",
+                        content: fullPrompt
+                    }
+                ]);
+                
+                const generatedCode = response.message?.content || response;
+                
+                // Extract HTML from markdown code blocks if present
+                let htmlCode = generatedCode;
+                const htmlMatch = generatedCode.match(/```html\n([\s\S]*?)\n```/);
+                if (htmlMatch) {
+                    htmlCode = htmlMatch[1];
+                } else {
+                    // Try to find HTML without markdown
+                    const docMatch = generatedCode.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
+                    if (docMatch) {
+                        htmlCode = docMatch[0];
+                    }
+                }
+                
+                codeOutput.value = htmlCode;
+                updatePreview();
+                showStatus('WebApp generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating webapp:', error);
+                showStatus('Error generating webapp. Please try again.', 'error');
+            } finally {
+                isGenerating = false;
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate WebApp';
+            }
+        }
+        
+        function setExample(exampleText) {
+            promptInput.value = exampleText;
+            hideStatus();
+        }
+        
+        // Make setExample available globally for onclick handlers
+        window.setExample = setExample;
+        
+        function clearAll() {
+            codeOutput.value = '';
+            previewFrame.src = 'about:blank';
+            hideStatus();
+        }
+        
+        // Event listeners - wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            generateBtn.addEventListener('click', generateWebApp);
+            updateBtn.addEventListener('click', updatePreview);
+            clearBtn.addEventListener('click', clearAll);
+            
+            // Auto-update preview when code changes (debounced)
+            let updateTimeout;
+            codeOutput.addEventListener('input', () => {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updatePreview, 1000);
+            });
+            
+            // Allow Enter + Ctrl/Cmd to generate
+            promptInput.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    generateWebApp();
+                }
+            });
+            
+            // Initialize
+            hideStatus();
+        });
+    </script>
+</body>
+</html>
