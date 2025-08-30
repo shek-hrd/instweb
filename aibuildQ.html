@@ -224,6 +224,19 @@
             border-left-color: var(--danger);
             background: #ffebee;
         }
+        .log-entry.debug {
+            border-left-color: var(--warning);
+            background: #fff8e1;
+            font-size: var(--font-size-xs); /* Smaller debug text */
+        }
+        .log-entry.debug summary {
+             cursor: pointer;
+             font-weight: bold;
+             margin-bottom: 4px;
+        }
+        .log-entry.debug details {
+             margin-left: 10px;
+        }
 
         /* Status & Info Styles */
         .status-container {
@@ -411,26 +424,77 @@
             logEntries.push(entry);
             renderLog();
         }
-        // Function to render log entries
+        // Function to add detailed debug entry to log
+        function addDebugLog(label, data) {
+             const timestamp = new Date().toISOString();
+             const timeString = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+             const entryElement = document.createElement('div');
+             entryElement.className = `log-entry debug`;
+             // Safely convert data to string for display
+             let dataString = "N/A";
+             if (data !== null && data !== undefined) {
+                 if (typeof data === 'object') {
+                     try {
+                         dataString = JSON.stringify(data, null, 2); // Pretty print JSON
+                     } catch (e) {
+                         dataString = String(data); // Fallback if JSON stringify fails
+                     }
+                 } else {
+                     dataString = String(data);
+                 }
+             }
+             const escapedDataString = dataString
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "<")
+                 .replace(/>/g, ">")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+
+             entryElement.innerHTML = `
+                 <strong>${timeString} [DEBUG]:</strong>
+                 <details>
+                     <summary>${label}</summary>
+                     <pre>${escapedDataString}</pre>
+                 </details>
+             `;
+             logContainer.appendChild(entryElement);
+             logContainer.scrollTop = logContainer.scrollHeight;
+             // Keep log size manageable
+             const allEntries = logContainer.querySelectorAll('.log-entry');
+             if (allEntries.length > 50) {
+                 allEntries[0].remove();
+             }
+        }
+        // Function to render log entries (for standard entries)
         function renderLog() {
-            logContainer.innerHTML = '';
-            // Only show last 50 entries to keep performance good
-            const recentEntries = logEntries.slice(-50);
-            recentEntries.forEach(entry => {
-                const entryElement = document.createElement('div');
-                entryElement.className = `log-entry ${entry.type}`;
-                // Format timestamp
-                const timeString = new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                entryElement.innerHTML = `<strong>${timeString}:</strong> ${entry.content}`;
-                logContainer.appendChild(entryElement);
-            });
-            // Scroll to bottom
+            // This function now only handles standard log entries added via addToLog
+            // Debug logs are added directly to the DOM by addDebugLog
+            // We still need this to manage the list of standard entries and scrolling
+            // But we don't rebuild the entire log container anymore.
+
+            // Scroll to bottom after standard entries are added
             logContainer.scrollTop = logContainer.scrollHeight;
+            // Keep log size manageable for standard entries too
+            const standardEntries = logContainer.querySelectorAll('.log-entry:not(.debug)');
+            if (standardEntries.length > 50) {
+                 // Remove the oldest standard entry if we exceed 50
+                 // Find the first non-debug entry
+                 let firstStandardEntry = null;
+                 for (let i = 0; i < logContainer.children.length; i++) {
+                     if (!logContainer.children[i].classList.contains('debug')) {
+                         firstStandardEntry = logContainer.children[i];
+                         break;
+                     }
+                 }
+                 if (firstStandardEntry) {
+                     firstStandardEntry.remove();
+                 }
+            }
         }
         // Function to clear log
         function clearLog() {
             logEntries = [];
-            renderLog();
+            logContainer.innerHTML = ''; // Clear all DOM elements
         }
         // Function to generate the HTML code for the app
         async function generateAppCode(description, model) {
@@ -458,7 +522,15 @@
                     updateProgress(progress);
                 }, 200);
 
+                // --- Debugging: Log the request ---
+                addDebugLog("AI Request (Prompt)", prompt);
+                addDebugLog("AI Request (Options)", { model: model });
+
                 const response = await puter.ai.chat(prompt, { model: model });
+
+                // --- Debugging: Log the raw response ---
+                addDebugLog("AI Raw Response", response);
+
                 // Clear the interval if the request is successful
                 if (interval) {
                     clearInterval(interval);
@@ -497,18 +569,37 @@
                 }
                 updateProgress(0);
                 console.error('Error generating app:', error);
-                if (error.code === 'error_400_from_delegate' && error.delegate === 'usage-limited-chat') {
-                    const errorMsg = 'Usage limit reached. Please wait.';
+
+                // --- Debugging: Log the caught error ---
+                addDebugLog("AI Error Caught", error);
+
+                // Robust error handling: Check if error and error.message exist
+                let errorMsg = 'An unknown error occurred.';
+                if (error) {
+                    if (typeof error === 'string') {
+                        errorMsg = error;
+                    } else if (error.message && typeof error.message === 'string') {
+                        errorMsg = error.message;
+                    } else if (error.toString && typeof error.toString === 'function') {
+                        errorMsg = error.toString();
+                    } else {
+                        errorMsg = JSON.stringify(error); // Fallback for unusual error objects
+                    }
+                }
+
+                // More robust checks for specific error types
+                if (error && error.code === 'error_400_from_delegate' && error.delegate === 'usage-limited-chat') {
+                    errorMsg = 'Usage limit reached. Please wait.';
                     addToLog('error', errorMsg);
                     throw new Error(errorMsg);
-                } else if (error.message.includes('Permission denied')) {
-                    const errorMsg = 'Access denied. Please refresh.';
+                } else if (error && error.message && typeof error.message === 'string' && error.message.includes('Permission denied')) {
+                    errorMsg = 'Access denied. Please refresh.';
                     addToLog('error', errorMsg);
                     throw new Error(errorMsg);
                 } else {
-                    const errorMsg = `Failed: ${error.message || 'Unknown error'}`;
-                    addToLog('error', errorMsg);
-                    throw new Error(errorMsg);
+                    // Use the robustly determined errorMsg
+                    addToLog('error', `Failed: ${errorMsg}`);
+                    throw new Error(errorMsg); // Re-throw the robust error message
                 }
             }
             // Ensure interval is cleared if the function exits unexpectedly (though unlikely with async/await)
@@ -542,7 +633,16 @@
                 loadPreview(htmlCode);
                 updateStatus('App generated successfully!', false);
             } catch (error) {
-                updateStatus(`Error: ${error.message}`, false);
+                // Robustly display the error message
+                let displayMsg = 'An unknown error occurred.';
+                if (error && typeof error === 'string') {
+                    displayMsg = error;
+                } else if (error && error.message && typeof error.message === 'string') {
+                    displayMsg = error.message;
+                } else if (error && error.toString && typeof error.toString === 'function') {
+                    displayMsg = error.toString();
+                }
+                updateStatus(`Error: ${displayMsg}`, false);
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.innerHTML = '<span>Generate App</span>';
@@ -562,7 +662,4 @@
         window.addEventListener('load', () => {
             appDescriptionInput.value = "A simple todo list app with add, delete, and mark complete functionality.";
             addToLog('prompt', 'Page loaded - ready to generate apps');
-        });
-    </script>
-</body>
-</html>
+ 
