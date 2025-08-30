@@ -445,18 +445,25 @@
                 Please make the generated code as robust and clean as possible.
                 The final code should be optimized for performance and user experience.
             `;
+            // Declare interval variable in a scope accessible to try/catch/finally
+            let interval = null;
             try {
                 updateProgress(0);
                 updateStatus('Initializing AI...', true);
                 let progress = 0;
-                const interval = setInterval(() => {
+                // Assign the interval ID to the variable
+                interval = setInterval(() => {
                     progress += Math.random() * 10;
                     if (progress > 90) progress = 90; // Cap progress until response
                     updateProgress(progress);
                 }, 200);
 
                 const response = await puter.ai.chat(prompt, { model: model });
-                clearInterval(interval);
+                // Clear the interval if the request is successful
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null; // Good practice to nullify after clearing
+                }
                 updateProgress(100);
 
                 if (response && response.message && response.message.content && Array.isArray(response.message.content)) {
@@ -483,7 +490,11 @@
                     throw new Error('Unexpected response format from AI');
                 }
             } catch (error) {
-                clearInterval(interval);
+                // Clear the interval if an error occurs
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null; // Good practice to nullify after clearing
+                }
                 updateProgress(0);
                 console.error('Error generating app:', error);
                 if (error.code === 'error_400_from_delegate' && error.delegate === 'usage-limited-chat') {
@@ -499,6 +510,13 @@
                     addToLog('error', errorMsg);
                     throw new Error(errorMsg);
                 }
+            }
+            // Ensure interval is cleared if the function exits unexpectedly (though unlikely with async/await)
+            finally {
+                 if (interval) {
+                    clearInterval(interval);
+                    interval = null;
+                 }
             }
         }
         // Function to load the generated HTML into the iframe
