@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Web App Builder</title>
+    <style>
+        /* Modern, sleek styling */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --gray: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--accent);
+        }
+
+        .editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(76, 201, 240, 0.2);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            background: white;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--gray);
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .preview-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #previewFrame {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            background: white;
+            min-height: 500px;
+        }
+
+        .status-container {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            background: #e9f7fe;
+            border-left: 4px solid var(--accent);
+        }
+
+        .status-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .log-section {
+            margin-top: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: var(--border-radius);
+            background: #f8f9fa;
+            border-left: 3px solid var(--accent);
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .log-entry.prompt {
+            border-left-color: var(--primary);
+            background: #eef5ff;
+        }
+
+        .log-entry.response {
+            border-left-color: var(--success);
+            background: #f0fff4;
+        }
+
+        .log-entry.error {
+            border-left-color: var(--danger);
+            background: #ffebee;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .clear-btn {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .model-info {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .model-info h4 {
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+
+        .model-info p {
+            margin: 3px 0;
+            color: var(--gray);
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .editor-footer {
+            margin-top: 15px;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .editor-actions button {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .editor-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Web App Builder</h1>
+            <p class="subtitle">Describe your app and generate it with Claude AI models</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="panel editor-section">
+                <h2 class="panel-title">Code Editor</h2>
+                
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="editor-controls">
+                            <div class="control-group">
+                                <label for="appDescription">App Description</label>
+                                <textarea id="appDescription" placeholder="Describe what kind of web application you want to create..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-controls">
+                        <div class="control-group">
+                            <label for="modelSelect">AI Model</label>
+                            <select id="modelSelect">
+                                <option value="claude-sonnet-4">Claude Sonnet 4 (Balanced)</option>
+                                <option value="claude-opus-4">Claude Opus 4 (Most Intelligent)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="examples">Quick Examples</label>
+                            <select id="examples">
+                                <option value="">Select an example...</option>
+                                <option value="A simple calculator with basic operations">Calculator</option>
+                                <option value="A weather forecast app showing current conditions and 5-day forecast">Weather App</option>
+                                <option value="A to-do list with add, delete, and mark complete functionality">Todo List</option>
+                                <option value="A simple note-taking app with local storage">Note Taking</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="editor-footer">
+                        <div class="editor-actions">
+                            <button id="generateBtn">
+                                <span>Generate App</span>
+                            </button>
+                            <button id="clearLogBtn" class="btn-secondary clear-btn">
+                                Clear Log
+                            </button>
+                        </div>
+                        
+                        <div class="model-info">
+                            <h4>Model Information</h4>
+                            <p><strong>Claude Sonnet 4:</strong> Optimal balance of intelligence, cost, and speed</p>
+                            <p><strong>Claude Opus 4:</strong> Most intelligent model for complex tasks</p>
+                        </div>
+                        
+                        <div class="status-container">
+                            <div class="status-message">
+                                <span id="statusText">Ready to generate your app</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="log-section">
+                    <div class="log-header">
+                        <h3>Generation Log</h3>
+                    </div>
+                    <div id="logContainer"></div>
+                </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="panel preview-section">
+                <h2 class="panel-title">Preview</h2>
+                <iframe id="previewFrame" title="Generated App Preview"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Puter.js library -->
+    <script src="https://js.puter.com/v2/"></script>
+
+    <script>
+        // DOM Elements
+        const appDescriptionInput = document.getElementById('appDescription');
+        const generateBtn = document.getElementById('generateBtn');
+        const previewFrame = document.getElementById('previewFrame');
+        const statusText = document.getElementById('statusText');
+        const progressFill = document.getElementById('progressFill');
+        const modelSelect = document.getElementById('modelSelect');
+        const examplesSelect = document.getElementById('examples');
+        const logContainer = document.getElementById('logContainer');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+
+        // Initialize logging array
+        let logEntries = [];
+
+        // Function to update the status message
+        function updateStatus(message, isLoading = false) {
+            statusText.textContent = message;
+            // Add loading indicator if needed
+            if (isLoading) {
+                statusText.innerHTML = `<span class="spinner"></span> ${message}`;
+            } else {
+                statusText.innerHTML = message;
+            }
+        }
+
+        // Function to update progress bar
+        function updateProgress(percent) {
+            progressFill.style.width = `${percent}%`;
+        }
+
+        // Function to add entry to log
+        function addToLog(type, content) {
+            const timestamp = new Date().toISOString();
+            const entry = {
+                timestamp,
+                type,
+                content
+            };
+            
+            logEntries.push(entry);
+            renderLog();
+        }
+
+        // Function to render log entries
+        function renderLog() {
+            logContainer.innerHTML = '';
+            
+            // Only show last 50 entries to keep performance good
+            const recentEntries = logEntries.slice(-50);
+            
+            recentEntries.forEach(entry => {
+                const entryElement = document.createElement('div');
+                entryElement.className = `log-entry ${entry.type}`;
+                entryElement.innerHTML = `<strong>${new Date(entry.timestamp).toLocaleTimeString()}:</strong> ${entry.content}`;
+                logContainer.appendChild(entryElement);
+            });
+            
+            // Scroll to bottom
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Function to clear log
+        function clearLog() {
+            logEntries = [];
+            renderLog();
+        }
+
+        // Function to generate the HTML code for the app
+        async function generateAppCode(description, model) {
+            // Add prompt to log
+            addToLog('prompt', `Generating app with ${model}: ${description}`);
+            
+            // Define the prompt for Claude
+            const prompt = `
+                Generate a complete, self-contained HTML file for a web application based on this description: "${description}".
+                The output should be valid HTML code only, including embedded CSS and JavaScript if needed.
+                Do not include any explanations or markdown formatting. Just the raw HTML code.
+                Make sure it's a single HTML file that works when opened directly in a browser.
+                The application should be visually appealing and functional.
+                Ensure the generated code uses modern web standards.
+                Please make the generated code as robust and clean as possible.
+                The final code should be optimized for performance and user experience.
+            `;
+
+            try {
+                // Reset progress
+                updateProgress(0);
+                updateStatus('Initializing AI...', true);
+                
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if (progress > 100) progress = 100;
+                    updateProgress(progress);
+                }, 200);
+
+                // Call Puter.js to interact with Claude
+                const response = await puter.ai.chat(prompt, { model: model });
+                
+                clearInterval(interval);
+                updateProgress(100);
+                
+                // Check if response is structured as expected
+                if (response && response.message && response.message.content && Array.isArray(response.message.content)) {
+                    // Extract the text content from the AI response
+                    const content = response.message.content[0];
+                    if (content && typeof content.text === 'string') {
+                        // Remove any markdown code blocks that might have been added
+                        let cleanedContent = content.text;
+                        if (cleanedContent.startsWith('```html')) {
+                            cleanedContent = cleanedContent.substring(7);
+                        }
+                        if (cleanedContent.endsWith('```')) {
+                            cleanedContent = cleanedContent.substring(0, cleanedContent.length - 3);
+                        }
+                        
+                        // Add response to log
+                        addToLog('response', `Generated ${cleanedContent.length} characters of HTML`);
+                        return cleanedContent;
+                    } else {
+                        throw new Error('Unexpected response format from AI: Missing text content');
+                    }
+                } else {
+                    throw new Error('Unexpected response format from AI');
+                }
+            } catch (error) {
+                clearInterval(interval);
+                updateProgress(0);
+                console.error('Error generating app:', error);
+                
+                // Handle specific error cases
+                if (error.code === 'error_400_from_delegate' && error.delegate === 'usage-limited-chat') {
+                    const errorMsg = 'Usage limit reached. Please wait a moment before trying again.';
+                    addToLog('error', errorMsg);
+                    throw new Error(errorMsg);
+                } else if (error.message.includes('Permission denied')) {
+                    const errorMsg = 'Access denied. Please refresh the page and try again.';
+                    addToLog('error', errorMsg);
+                    throw new Error(errorMsg);
+                } else {
+                    const errorMsg = `Failed to generate app: ${error.message || 'Unknown error'}`;
+                    addToLog('error', errorMsg);
+                    throw new Error(errorMsg);
+                }
+            }
+        }
+
+        // Function to load the generated HTML into the iframe
+        function loadPreview(htmlContent) {
+            // Create a blob from the HTML string
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            // Create an object URL for the blob
+            const url = URL.createObjectURL(blob);
+            // Set the iframe's source to the blob URL
+            previewFrame.src = url;
+            
+            // Add to log
+            addToLog('response', 'Preview loaded');
+        }
+
+        // Event listener for the generate button
+        generateBtn.addEventListener('click', async () => {
+            const description = appDescriptionInput.value.trim();
+            const model = modelSelect.value;
+
+            // Validate input
+            if (!description) {
+                updateStatus('Please enter a description for your app.', false);
+                addToLog('error', 'No description provided');
+                return;
+            }
+
+            // Disable button during processing
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="spinner"></span> Generating...';
+
+            try {
+                // Generate the HTML code
+                const htmlCode = await generateAppCode(description, model);
+
+                // Load the generated code into the preview iframe
+                loadPreview(htmlCode);
+
+                // Update status to success
+                updateStatus('App generated successfully!', false);
+            } catch (error) {
+                // Handle errors during generation
+                updateStatus(`Error: ${error.message}`, false);
+            } finally {
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<span>Generate App</span>';
+            }
+        });
+
+        // Event listener for example selection
+        examplesSelect.addEventListener('change', () => {
+            const selectedExample = examplesSelect.value;
+            if (selectedExample) {
+                appDescriptionInput.value = selectedExample;
+                examplesSelect.value = ''; // Reset selection
+            }
+        });
+
+        // Event listener for clear log button
+        clearLogBtn.addEventListener('click', clearLog);
+
+        // Optional: Generate an example app on page load
+        window.addEventListener('load', () => {
+            // Pre-fill the input with an example description
+            appDescriptionInput.value = "A simple todo list app with add, delete, and mark complete functionality.";
+            // Add initial log entry
+            addToLog('prompt', 'Page loaded - ready to generate apps');
+        });
+    </script>
+</body>
+</html>
