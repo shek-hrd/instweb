@@ -386,6 +386,19 @@
     <script src="https://js.puter.com/v2/"></script>
 
     <script>
+        // Secure app state management
+        const AppState = {
+            progressInterval: null,
+            logEntries: [],
+            
+            clearInterval() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                    this.progressInterval = null;
+                }
+            }
+        };
+
         // DOM Elements
         const appDescriptionInput = document.getElementById('appDescription');
         const generateBtn = document.getElementById('generateBtn');
@@ -397,8 +410,8 @@
         const logContainer = document.getElementById('logContainer');
         const clearLogBtn = document.getElementById('clearLogBtn');
 
-        // Initialize logging array
-        let logEntries = [];
+        // Configure iframe security
+        previewFrame.setAttribute('sandbox', 'allow-scripts allow-forms');
 
         // Function to update the status message
         function updateStatus(message, isLoading = false) {
