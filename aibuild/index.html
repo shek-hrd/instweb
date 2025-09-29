@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Web App Builder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Web App Builder</h1>
+            <p class="subtitle">Describe your app and generate it with Claude AI models</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Input Panel -->
+            <div class="panel input-section">
+                <h2 class="panel-title">Create Your App</h2>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="appDescription">App Description</label>
+                        <textarea id="appDescription" placeholder="Describe what kind of web application you want to create..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="modelSelect">AI Model</label>
+                        <select id="modelSelect">
+                            <option value="claude-sonnet-4">Claude Sonnet 4 (Balanced)</option>
+                            <option value="claude-opus-4">Claude Opus 4 (Most Intelligent)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="examples">Quick Examples</label>
+                        <select id="examples">
+                            <option value="">Select an example...</option>
+                            <option value="A simple calculator with basic operations">Calculator</option>
+                            <option value="A weather forecast app showing current conditions and 5-day forecast">Weather App</option>
+                            <option value="A to-do list with add, delete, and mark complete functionality">Todo List</option>
+                            <option value="A simple note-taking app with local storage">Note Taking</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="generateBtn">
+                        <span>Generate App</span>
+                    </button>
+                    <button id="clearLogBtn" class="btn-secondary clear-btn">
+                        Clear Log
+                    </button>
+                </div>
+                
+                <div class="model-info">
+                    <h4>Model Information</h4>
+                    <p><strong>Claude Sonnet 4:</strong> Optimal balance of intelligence, cost, and speed</p>
+                    <p><strong>Claude Opus 4:</strong> Most intelligent model for complex tasks</p>
+                </div>
+                
+                <div class="status-container">
+                    <div class="status-message">
+                        <span id="statusText">Ready to generate your app</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Panel -->
+            <div class="panel preview-section">
+                <h2 class="panel-title">Preview</h2>
+                <iframe id="previewFrame" title="Generated App Preview"></iframe>
+                
+                <div class="log-section">
+                    <div class="log-header">
+                        <h3>Generation Log</h3>
+                    </div>
+                    <div id="logContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Puter.js library -->
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="script.js"></script>
+</body>
+</html>
