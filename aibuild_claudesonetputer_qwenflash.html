@@ -493,19 +493,17 @@
 
             try {
                 // Clear any existing interval
-                if (window.activeInterval) {
-                    clearInterval(window.activeInterval);
-                }
+                AppState.clearInterval();
                 
                 // Simulate progress
-                interval = setInterval(() => {
+                AppState.progressInterval = setInterval(() => {
                     progress += Math.random() * 10;
-                    if (progress > 100) progress = 100;
+                    if (progress > 100) {
+                        progress = 100;
+                        AppState.clearInterval();
+                    }
                     updateProgress(progress);
                 }, 200);
-                
-                // Store the interval globally for cleanup
-                window.activeInterval = interval;
 
                 // Call Puter.js to interact with Claude and handle response
                 const response = await puter.ai.chat([
@@ -516,8 +514,7 @@
                 ], { model: model });
                 
                 // Clear and cleanup interval
-                clearInterval(interval);
-                window.activeInterval = null;
+                AppState.clearInterval();
                 updateProgress(100);
                 
                 // Log raw response for debugging and analysis
@@ -557,8 +554,7 @@
                 return generatedCode;
             } catch (error) {
                 // Clear and cleanup interval
-                clearInterval(interval);
-                window.activeInterval = null;
+                AppState.clearInterval();
                 updateProgress(0);
                 console.error('Error generating app:', error);
                 
@@ -583,17 +579,61 @@
             }
         }
 
+        // Function to validate HTML content
+        function validateHTML(content) {
+            if (typeof content !== 'string') {
+                throw new Error('Invalid content type');
+            }
+            
+            if (!content.includes('<!DOCTYPE html>') || !content.includes('<html')) {
+                throw new Error('Invalid HTML structure');
+            }
+
+            // Check for potentially dangerous patterns
+            const dangerousPatterns = [
+                'javascript:',
+                'data:',
+                'vbscript:',
+                '<script\\s+src=',
+                'onerror=',
+                'onload=',
+                'onclick='
+            ];
+
+            const pattern = new RegExp(dangerousPatterns.join('|'), 'i');
+            if (pattern.test(content)) {
+                throw new Error('Potentially unsafe content detected');
+            }
+
+            return content;
+        }
+
         // Function to load the generated HTML into the iframe
         function loadPreview(htmlContent) {
-            // Create a blob from the HTML string
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            // Create an object URL for the blob
-            const url = URL.createObjectURL(blob);
-            // Set the iframe's source to the blob URL
-            previewFrame.src = url;
-            
-            // Add to log
-            addToLog('response', 'Preview loaded');
+            try {
+                // Validate HTML content
+                const validatedContent = validateHTML(htmlContent);
+                
+                // Create a blob from the HTML string
+                const blob = new Blob([validatedContent], { type: 'text/html;charset=utf-8' });
+                
+                // Create an object URL for the blob
+                const url = URL.createObjectURL(blob);
+                
+                // Set the iframe's source to the blob URL
+                previewFrame.src = url;
+                
+                // Cleanup: Revoke the URL after the iframe loads
+                previewFrame.onload = () => {
+                    URL.revokeObjectURL(url);
+                };
+                
+                // Add to log
+                addToLog('response', 'Preview loaded successfully');
+            } catch (error) {
+                addToLog('error', `Preview loading failed: ${error.message}`);
+                throw error;
+            }
         }
 
         // Event listener for the generate button
