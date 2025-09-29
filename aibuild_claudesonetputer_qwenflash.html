@@ -410,8 +410,10 @@
         const logContainer = document.getElementById('logContainer');
         const clearLogBtn = document.getElementById('clearLogBtn');
 
-        // Configure iframe security
-        previewFrame.setAttribute('sandbox', 'allow-scripts allow-forms');
+        // Configure iframe security with strict permissions
+        previewFrame.setAttribute('sandbox', 'allow-scripts');  // Only allow scripts, forms not needed for preview
+        previewFrame.setAttribute('security', 'restricted');
+        previewFrame.setAttribute('referrerpolicy', 'no-referrer');
 
         // Function to update the status message
         function updateStatus(message, isLoading = false) {
