@@ -703,6 +703,21 @@
 
                 } catch (error) {
                     console.error('Error generating app:', error);
+
+                    // Try fallback to working AI if this is the first attempt and we have working alternatives
+                    if (retryCount === 0 && availableModels.length > 1) {
+                        const fallbackModels = availableModels.filter(m => m !== model);
+                        if (fallbackModels.length > 0) {
+                            const fallbackModel = fallbackModels[0];
+                            addToLog('error', `Primary AI (${model}) failed, trying fallback: ${fallbackModel}`);
+                            try {
+                                return await generateAppCode(description, fallbackModel, retryCount + 1);
+                            } catch (fallbackError) {
+                                addToLog('error', `Fallback AI also failed: ${fallbackError.message}`);
+                            }
+                        }
+                    }
+
                     const errorMsg = `Failed to generate app: ${error.message || 'Unknown error'}`;
                     addToLog('error', errorMsg);
                     throw new Error(errorMsg);
@@ -1304,8 +1319,11 @@
             // Event listener for clear log button
             clearLogBtn.addEventListener('click', clearLog);
 
-            // Optional: Generate an example app on page load
-            window.addEventListener('load', () => {
+            // Initialize AI services and setup
+            window.addEventListener('load', async () => {
+                // Initialize AI services first
+                await initializeAIServices();
+
                 // Pre-fill the input with an example description
                 appDescriptionInput.value = "A simple todo list app with add, delete, and mark complete functionality.";
                 // Add initial log entry
