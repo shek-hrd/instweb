@@ -509,7 +509,7 @@
                             break;
 
                         case 'code-supernova-free':
-                            const supernovaResponse = await puter.ai.chat(testPrompt, { model: 'claude-sonnet-4' });
+                            const supernovaResponse = await puter.ai.chat(testPrompt, { model: 'code-supernova-1-million' });
                             if (supernovaResponse && supernovaResponse.message && supernovaResponse.message.content) {
                                 return true;
                             }
@@ -737,7 +737,7 @@
                 try {
                     // Use the internal code-supernova model
                     const response = await puter.ai.chat(prompt, {
-                        model: 'claude-sonnet-4'
+                        model: 'code-supernova-1-million'
                     });
 
                     clearInterval(interval);
@@ -1328,7 +1328,6 @@
                 appDescriptionInput.value = "A simple todo list app with add, delete, and mark complete functionality.";
                 // Add initial log entry
                 addToLog('prompt', 'Page loaded - ready to generate apps');
-                await initializeAIServices();
             });
         </script>
     </body>

@@ -1,0 +1,1 @@
+"                addToLog('prompt', 'Page loaded - ready to generate apps'); await initializeAIServices();" 
