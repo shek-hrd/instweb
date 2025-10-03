@@ -307,7 +307,10 @@
         <div class="container">
             <header>
                 <h1>Multi-AI Web App Builder</h1>
-                <p class="subtitle">Describe your app and generate it with 13+ different AI models from various providers</p>
+                <p class="subtitle">Describe your app and generate it with multiple AI models from various providers</p>
+                <div id="aiStatus" style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+                    <span id="statusText">Initializing AI services...</span>
+                </div>
             </header>
             <div class="main-content">
                 <!-- Input Panel -->
@@ -420,6 +423,10 @@
         <!-- Include Puter.js library -->
         <script src="https://js.puter.com/v2/"></script>
         <script>
+            // AI Service Management
+            const aiServices = {};
+            const availableModels = [];
+
             // DOM Elements
             const appDescriptionInput = document.getElementById('appDescription');
             const generateBtn = document.getElementById('generateBtn');
@@ -430,6 +437,7 @@
             const examplesSelect = document.getElementById('examples');
             const logContainer = document.getElementById('logContainer');
             const clearLogBtn = document.getElementById('clearLogBtn');
+            const aiStatusText = document.getElementById('statusText');
 
             // Initialize logging array
             let logEntries = [];
@@ -479,20 +487,166 @@
                 renderLog();
             }
 
+            // AI Service Testing Functions
+            async function testAIService(modelKey, serviceName) {
+                try {
+                    const testPrompt = `Hello, please respond with just "OK" if you can hear me.`;
+
+                    switch(modelKey) {
+                        case 'claude-sonnet-4':
+                        case 'claude-opus-4':
+                            const response = await puter.ai.chat(testPrompt, { model: modelKey });
+                            if (response && response.message && response.message.content) {
+                                return true;
+                            }
+                            break;
+
+                        case 'gemini-puter':
+                            const geminiResponse = await puter.ai.chat(testPrompt, { model: 'gemini-pro' });
+                            if (geminiResponse && geminiResponse.message && geminiResponse.message.content) {
+                                return true;
+                            }
+                            break;
+
+                        case 'code-supernova-free':
+                            const supernovaResponse = await puter.ai.chat(testPrompt, { model: 'code-supernova-1-million' });
+                            if (supernovaResponse && supernovaResponse.message && supernovaResponse.message.content) {
+                                return true;
+                            }
+                            break;
+
+                        default:
+                            // For external APIs, we'll mark them as requiring API keys
+                            return false;
+                    }
+                    return false;
+                } catch (error) {
+                    console.log(`${serviceName} test failed:`, error.message);
+                    return false;
+                }
+            }
+
+            // Initialize AI Services
+            async function initializeAIServices() {
+                aiStatusText.textContent = 'Testing AI services...';
+
+                const servicesToTest = [
+                    { key: 'claude-sonnet-4', name: 'Claude Sonnet 4', group: '🧠 Anthropic Claude' },
+                    { key: 'claude-opus-4', name: 'Claude Opus 4', group: '🧠 Anthropic Claude' },
+                    { key: 'gemini-puter', name: 'Google Gemini (Puter)', group: '🔥 Google Gemini' },
+                    { key: 'code-supernova-free', name: 'Code Supernova', group: '🚀 Code Supernova (1M Free)' }
+                ];
+
+                let workingServices = 0;
+
+                for (const service of servicesToTest) {
+                    const isWorking = await testAIService(service.key, service.name);
+                    aiServices[service.key] = {
+                        name: service.name,
+                        group: service.group,
+                        working: isWorking,
+                        requiresApiKey: !isWorking
+                    };
+
+                    if (isWorking) {
+                        availableModels.push(service.key);
+                        workingServices++;
+                    }
+                }
+
+                // Update UI with available models
+                updateModelSelect();
+
+                if (workingServices > 0) {
+                    aiStatusText.textContent = `Ready! ${workingServices} AI services available`;
+                } else {
+                    aiStatusText.textContent = 'No AI services available - some may require API keys';
+                }
+            }
+
+            // Update model selection dropdown
+            function updateModelSelect() {
+                const currentValue = modelSelect.value;
+
+                // Clear existing options
+                while (modelSelect.children.length > 0) {
+                    modelSelect.removeChild(modelSelect.children[0]);
+                }
+
+                // Add working models first
+                availableModels.forEach(modelKey => {
+                    const service = aiServices[modelKey];
+                    if (service && service.working) {
+                        const option = document.createElement('option');
+                        option.value = modelKey;
+                        option.textContent = `${service.group} - ${service.name}`;
+                        modelSelect.appendChild(option);
+                    }
+                });
+
+                // Add non-working models that require API keys
+                Object.keys(aiServices).forEach(modelKey => {
+                    const service = aiServices[modelKey];
+                    if (service && !service.working) {
+                        const option = document.createElement('option');
+                        option.value = modelKey;
+                        option.textContent = `${service.group} - ${service.name} (API Key Required)`;
+                        option.disabled = true;
+                        modelSelect.appendChild(option);
+                    }
+                });
+
+                // Restore previous selection if still available
+                if (currentValue && modelSelect.querySelector(`option[value="${currentValue}"]`)) {
+                    modelSelect.value = currentValue;
+                }
+            }
+
+            // API Key Management
+            function showApiKeyDialog(serviceName, modelKey) {
+                const apiKey = prompt(`Enter API key for ${serviceName}:\n\nThis key will be stored locally for this session only.`);
+                if (apiKey && apiKey.trim()) {
+                    localStorage.setItem(`apiKey_${modelKey}`, apiKey.trim());
+                    return apiKey.trim();
+                }
+                return null;
+            }
+
+            // Get stored API key
+            function getStoredApiKey(modelKey) {
+                return localStorage.getItem(`apiKey_${modelKey}`);
+            }
+
             // Function to generate the HTML code for the app
-            async function generateAppCode(description, model) {
+            async function generateAppCode(description, model, retryCount = 0) {
                 // Add prompt to log
                 addToLog('prompt', `Generating app with ${model}: ${description}`);
 
                 // Define the prompt for all AI models
                 const prompt = `Generate a complete, self-contained HTML file for a web application based on this description: "${description}". The output should be valid HTML code only, including embedded CSS and JavaScript if needed. Do not include any explanations or markdown formatting. Just the raw HTML code. Make sure it's a single HTML file that works when opened directly in a browser. The application should be visually appealing and functional. Ensure the generated code uses modern web standards. Please make the generated code as robust and clean as possible. The final code should be optimized for performance and user experience.`;
 
+                
                 try {
                     // Reset progress
                     updateProgress(0);
                     updateStatus('Initializing AI...', true);
 
                     let response;
+
+                    // Check if model requires API key and get it
+                    const service = aiServices[model];
+                    if (service && service.requiresApiKey) {
+                        let apiKey = getStoredApiKey(model);
+                        if (!apiKey) {
+                            apiKey = showApiKeyDialog(service.name, model);
+                            if (!apiKey) {
+                                throw new Error(`API key required for ${service.name}. Please provide a valid API key.`);
+                            }
+                        }
+                    }
+>>>>>>> REPLACE
+</diff>
+</search_and_replace>
 
                     // Route to appropriate AI service based on model selection
                     switch(model) {
